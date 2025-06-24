@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planet Coin Launch Event Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .tab-active {
+            border-bottom-color: #4ade80; /* green-400 */
+            color: #16a34a; /* green-700 */
+            font-weight: 600;
+        }
+        .tab-inactive {
+            border-bottom-color: transparent;
+            color: #4b5563; /* gray-600 */
+        }
+        .details-row {
+            display: none;
+        }
+        .details-row.show {
+            display: table-row;
+        }
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
+        .transition-transform {
+            transition: transform 0.2s ease-in-out;
+        }
+        .custom-select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+        /* Markdown formatting for AI insights */
+        #aiInsightsContent h1, #aiInsightsContent h2, #aiInsightsContent h3 {
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        #aiInsightsContent h1 { font-size: 1.25rem; }
+        #aiInsightsContent h2 { font-size: 1.1rem; }
+        #aiInsightsContent ul { list-style-type: disc; margin-left: 1.5rem; }
+        #aiInsightsContent li { margin-bottom: 0.25rem; }
+        #aiInsightsContent p { margin-bottom: 0.5rem; }
+
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <img src="https://fa0uejliegotib9m.public.blob.vercel-storage.com/Logo_1-9nZp1lzY4U50CNOHAewe6lmnM1NLmQ.png" 
+                 alt="Planet Coin Logo" 
+                 class="mx-auto h-24 w-auto mb-4"
+                 onerror="this.onerror=null; this.src='https://placehold.co/100x100/e0e0e0/000000?text=Logo';">
+            <h1 class="text-2xl md:text-4xl font-bold text-green-800">Planet Coin Launch Event</h1>
+            <p class="text-lg md:text-xl text-slate-600">Star Connector Dashboard</p>
+        </header>
+
+        <!-- Tabs -->
+        <div class="mb-6 border-b border-gray-200">
+            <nav class="flex -mb-px space-x-4 md:space-x-6" aria-label="Tabs">
+                <button id="tab-form" class="py-4 px-1 border-b-2 text-base font-medium tab-active" onclick="showPage('form')">Entry Form</button>
+                <button id="tab-summary" class="py-4 px-1 border-b-2 text-base font-medium tab-inactive" onclick="showPage('summary')">Summary View</button>
+            </nav>
+        </div>
+
+        <!-- Page Content -->
+        <main>
+            <!-- Page 1: Entry Form -->
+            <div id="page-form">
+                <div class="bg-white p-4 md:p-8 rounded-xl shadow-sm max-w-5xl mx-auto">
+                    <form id="entryForm" class="space-y-6">
+                         <div>
+                            <h3 class="text-lg font-semibold text-green-700 mb-4 border-l-4 border-green-500 pl-3">Star Connector Details</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="starConnectorName" class="block text-sm font-medium text-slate-700">Star Connector Name <span class="text-red-500">*</span></label>
+                                    <input type="text" id="starConnectorName" name="starConnectorName" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                </div>
+                                <div>
+                                    <label for="connectorPhone" class="block text-sm font-medium text-slate-700">Star Connector Phone <span class="text-red-500">*</span></label>
+                                    <input type="tel" id="connectorPhone" name="connectorPhone" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                    <p id="phoneError" class="text-red-500 text-xs mt-1 hidden">Phone number must be 10 digits.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-semibold text-green-700 mb-4 border-l-4 border-green-500 pl-3">Participant Details</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="participantName" class="block text-sm font-medium text-slate-700">Participant Name <span class="text-red-500">*</span></label>
+                                    <input type="text" id="participantName" name="participantName" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                </div>
+                                <div>
+                                    <label for="role" class="block text-sm font-medium text-slate-700">Role <span class="text-red-500">*</span></label>
+                                    <select id="role" name="role" required class="custom-select mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                        <option value="" disabled selected>Select a role</option>
+                                        <option value="Investor">Investor</option>
+                                        <option value="Marketing Leader">Marketing Leader</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="city" class="block text-sm font-medium text-slate-700">City <span class="text-red-500">*</span></label>
+                                    <input type="text" id="city" name="city" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                </div>
+                                <div>
+                                    <label for="status" class="block text-sm font-medium text-slate-700">Attendance Status <span class="text-red-500">*</span></label>
+                                    <select id="status" name="status" required class="custom-select mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                        <option value="" disabled selected>Select status</option>
+                                        <option value="Confirmed">Confirmed</option>
+                                        <option value="Not Confirmed">Not Confirmed</option>
+                                    </select>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label for="expectedInvestment" class="block text-sm font-medium text-slate-700">Expected Investment Amount (INR) <span class="text-red-500">*</span></label>
+                                    <select id="expectedInvestment" name="expectedInvestment" required class="custom-select mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                        <option value="" disabled selected>Select amount</option>
+                                        <option value="Less than 1 Lakh">Less than 1 Lakh</option>
+                                        <option value="More than 1 Lakh">More than 1 Lakh</option>
+                                        <option value="More than 5 Lakhs">More than 5 Lakhs</option>
+                                        <option value="More than 10 Lakhs">More than 10 Lakhs</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <button type="submit" id="submitButton" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                                Submit Entry
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Page 2: Summary View -->
+            <div id="page-summary" class="hidden">
+                <div class="bg-white p-4 md:p-8 rounded-xl shadow-sm max-w-5xl mx-auto">
+                    <h2 class="text-2xl font-bold text-green-800 mb-4">Live Summary</h2>
+                     <p class="text-sm text-slate-500 mb-6">Click on a row to expand and see participant details. This summary updates automatically.</p>
+                    <div id="summary-loader" class="text-center py-10">
+                        <p class="text-slate-600">Loading summary data...</p>
+                    </div>
+                    <div id="summary-content" class="hidden">
+                        <div class="overflow-x-auto">
+                           <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-slate-100">
+                                    <tr>
+                                        <th scope="col" class="w-12"></th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Star Connector Name</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">Total Participants</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="summaryTableBody" class="bg-white divide-y divide-gray-200">
+                                    <!-- Rows will be inserted here by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                         <div id="no-data-message" class="text-center py-10 hidden">
+                             <p class="text-slate-500">No entries submitted yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden Admin Button -->
+    <button id="adminAccessButton" class="fixed top-5 right-5 w-10 h-10 bg-green-600 rounded-full shadow-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-transform hover:scale-110 flex items-center justify-center text-white">
+        <span class="sr-only">Admin Access</span>
+    </button>
+
+    <!-- Modals -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 md:p-8 max-w-sm w-full text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900">Submission Successful!</h3>
+            <p class="mt-2 text-sm text-gray-600">The participant's details have been recorded.</p>
+            <div class="mt-4"><button type="button" onclick="closeModal('successModal')" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none">OK</button></div>
+        </div>
+    </div>
+
+    <div id="deleteConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 md:p-8 max-w-sm w-full">
+             <h3 class="text-lg font-medium text-gray-900">Confirm Deletion</h3>
+             <p class="mt-2 text-sm text-gray-600">Are you sure you want to delete this participant? This action cannot be undone.</p>
+             <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <button type="button" id="confirmDeleteButton" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Delete</button>
+                <button type="button" onclick="closeModal('deleteConfirmModal')" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="updateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 md:p-8 max-w-2xl w-full">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Update Participant Details</h3>
+            <form id="updateForm" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                <!-- Form content will be injected by JS -->
+            </form>
+        </div>
+    </div>
+    
+    <div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 md:p-8 max-w-sm w-full">
+            <h3 class="text-lg font-medium leading-6 text-gray-900">Admin Access</h3>
+            <form id="passwordForm" class="mt-4 space-y-4">
+                <div>
+                    <label for="adminPassword" class="block text-sm font-medium text-gray-700">Enter Password</label>
+                    <input type="password" name="adminPassword" id="adminPassword" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                    <p id="passwordError" class="text-red-500 text-xs mt-1 hidden">Incorrect password. Please try again.</p>
+                </div>
+                <div class="flex justify-end space-x-3">
+                     <button type="button" onclick="closeModal('passwordModal')" class="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300">Cancel</button>
+                     <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="adminDataModal" class="fixed inset-0 bg-slate-100 p-4 md:p-8 hidden z-40 overflow-y-auto">
+        <div class="bg-white p-4 md:p-8 rounded-xl shadow-xl w-full max-w-7xl mx-auto">
+             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                <div>
+                   <h2 class="text-2xl font-bold text-green-800">Admin View: Full Data Export</h2>
+                   <p class="text-sm text-slate-500 mt-1">This is a live view of all raw data for internal use.</p>
+                </div>
+                <div class="flex items-center space-x-3 mt-4 md:mt-0">
+                    <button id="aiInsightsButton" class="flex items-center justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none">
+                        <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3.5a1.5 1.5 0 011.5 1.5v.084a2.5 2.5 0 00.375 1.259 3.5 3.5 0 01.993 2.549V15.5A1.5 1.5 0 0111.5 17h-3A1.5 1.5 0 017 15.5V8.892a3.5 3.5 0 01.993-2.55A2.5 2.5 0 008.5 5.084V5A1.5 1.5 0 0110 3.5zM7.127 18.155A3.001 3.001 0 0110 16.5c1.207 0 2.27.718 2.764 1.765A2.999 2.999 0 0110 19.5a2.999 2.999 0 01-2.873-1.345z" /></svg>
+                        Generate AI Insights
+                    </button>
+                    <button id="exportCsvButton" class="flex items-center justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Export to CSV
+                    </button>
+                    <button type="button" onclick="closeModal('adminDataModal')" class="text-slate-500 hover:text-slate-800 text-3xl leading-none">&times;</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table id="exportTable" class="min-w-full divide-y divide-gray-200">
+                   <thead class="bg-slate-100">
+                       <tr>
+                           <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Timestamp</th>
+                           <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Connector Name</th>
+                           <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Connector Phone</th>
+                           <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Participant Name</th>
+                           <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Role</th>
+                           <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">City</th>
+                           <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Status</th>
+                           <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Investment (INR)</th>
+                       </tr>
+                   </thead>
+                   <tbody id="exportTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+                 <div id="no-export-data-message" class="text-center py-10 hidden">
+                    <p class="text-slate-500">No entries submitted yet.</p>
+               </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="aiInsightsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 md:p-8 max-w-2xl w-full">
+            <div class="flex justify-between items-center mb-4">
+                 <h3 class="text-xl font-bold text-gray-900">AI Generated Insights</h3>
+                 <button type="button" onclick="closeModal('aiInsightsModal')" class="text-slate-500 hover:text-slate-800 text-3xl leading-none">&times;</button>
+            </div>
+            <div id="aiInsightsContent" class="prose max-w-none max-h-[60vh] overflow-y-auto">
+                <!-- AI content will be injected here -->
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, setLogLevel, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Configuration ---
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config)
+            : { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID", appId: "YOUR_APP_ID" };
+
+        // --- App & Firestore Initialization ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'planet-coin-launch';
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        setLogLevel('debug');
+
+        // --- Global State ---
+        let allParticipants = new Map();
+        let currentDeleteId = null;
+
+        // --- Firestore Collection Reference ---
+        const participantsCollectionRef = collection(db, `artifacts/${appId}/public/data/participants`);
+
+        // --- Authentication & Initial Load ---
+        onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            console.log("Authenticated with UID:", user.uid);
+            listenForDataUpdates();
+          } else {
+             try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Authentication failed:", error);
+            }
+          }
+        });
+        
+        function loadConnectorDetails() {
+            const savedName = localStorage.getItem('planetCoin_starConnectorName');
+            const savedPhone = localStorage.getItem('planetCoin_starConnectorPhone');
+            if (savedName) document.getElementById('starConnectorName').value = savedName;
+            if (savedPhone) document.getElementById('connectorPhone').value = savedPhone;
+        }
+        loadConnectorDetails();
+
+        // --- Page/Tab Switching Logic ---
+        window.showPage = (pageName) => {
+            document.getElementById('page-form').classList.toggle('hidden', pageName !== 'form');
+            document.getElementById('page-summary').classList.toggle('hidden', pageName === 'form');
+            document.getElementById('tab-form').classList.toggle('tab-active', pageName === 'form');
+            document.getElementById('tab-form').classList.toggle('tab-inactive', pageName !== 'form');
+            document.getElementById('tab-summary').classList.toggle('tab-active', pageName !== 'form');
+            document.getElementById('tab-summary').classList.toggle('tab-inactive', pageName === 'form');
+        };
+
+        // --- Form Submission Logic ---
+        document.getElementById('entryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitButton = document.getElementById('submitButton');
+            
+            // Phone number validation
+            const phoneInput = document.getElementById('connectorPhone');
+            const phoneError = document.getElementById('phoneError');
+            const phoneRegex = /^\d{10}$/;
+            if (!phoneRegex.test(phoneInput.value.trim())) {
+                phoneError.classList.remove('hidden');
+                return; // Stop submission
+            } else {
+                phoneError.classList.add('hidden');
+            }
+
+            if(!auth.currentUser) { console.error("User not authenticated."); return; }
+
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
+            const formData = new FormData(e.target);
+            const starConnectorName = formData.get('starConnectorName').trim();
+            const connectorPhone = formData.get('connectorPhone').trim();
+
+            const data = {
+                timestamp: serverTimestamp(), starConnectorName, connectorPhone,
+                participantName: formData.get('participantName').trim(), role: formData.get('role'),
+                city: formData.get('city').trim(), status: formData.get('status'),
+                expectedInvestment: formData.get('expectedInvestment') || null,
+            };
+            try {
+                await addDoc(participantsCollectionRef, data);
+                localStorage.setItem('planetCoin_starConnectorName', starConnectorName);
+                localStorage.setItem('planetCoin_starConnectorPhone', connectorPhone);
+                document.getElementById('participantName').value = '';
+                document.getElementById('role').value = '';
+                document.getElementById('city').value = '';
+                document.getElementById('status').value = '';
+                document.getElementById('expectedInvestment').value = '';
+                showModal('successModal');
+            } catch (error) {
+                console.error("Error adding document: ", error);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Submit Entry';
+            }
+        });
+
+        // --- Real-time Data Handling ---
+        function listenForDataUpdates() {
+            onSnapshot(participantsCollectionRef, (snapshot) => {
+                allParticipants.clear();
+                const sortedDocs = snapshot.docs.sort((a,b) => (b.data().timestamp?.toDate() || 0) - (a.data().timestamp?.toDate() || 0));
+                sortedDocs.forEach(doc => allParticipants.set(doc.id, { id: doc.id, ...doc.data() }));
+                updateSummaryView();
+                updateExportView(); 
+            }, (error) => {
+                console.error("Error fetching data: ", error);
+            });
+        }
+        
+        function updateSummaryView() {
+            const loader = document.getElementById('summary-loader');
+            const content = document.getElementById('summary-content');
+            const noDataMsg = document.getElementById('no-data-message');
+            const tableBody = document.getElementById('summaryTableBody');
+            
+            loader.classList.add('hidden');
+            content.classList.remove('hidden');
+
+            if (allParticipants.size === 0) {
+                noDataMsg.classList.remove('hidden');
+                tableBody.innerHTML = ''; return;
+            }
+            noDataMsg.classList.add('hidden');
+            
+            const summary = {};
+            allParticipants.forEach(p => {
+                const name = p.starConnectorName || 'Unknown';
+                if (!summary[name]) summary[name] = { participants: [], confirmed: 0, notConfirmed: 0 };
+                summary[name].participants.push(p);
+                if (p.status === 'Confirmed') summary[name].confirmed++;
+                else if (p.status === 'Not Confirmed') summary[name].notConfirmed++;
+            });
+            renderSummaryTable(summary);
+        }
+
+        function renderSummaryTable(summaryData) {
+            const tableBody = document.getElementById('summaryTableBody');
+            tableBody.innerHTML = ''; 
+            const sortedConnectors = Object.keys(summaryData).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+            sortedConnectors.forEach(connectorName => {
+                const data = summaryData[connectorName];
+                const connectorId = `connector-${connectorName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                const mainRow = `<tr class="cursor-pointer hover:bg-slate-50" onclick="toggleDetails('${connectorId}')"><td class="px-4 py-4"><svg id="icon-${connectorId}" class="w-5 h-5 text-slate-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg></td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${connectorName}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 text-center font-semibold">${data.participants.length}</td></tr>`;
+                let detailsHtml = `<div class="flex space-x-6 pl-8 pb-3 text-sm border-b border-green-200 mb-3"><p>Confirmed: <span class="font-bold text-green-600">${data.confirmed}</span></p><p>Not Confirmed: <span class="font-bold text-orange-600">${data.notConfirmed}</span></p></div><ul class="space-y-3 pl-8">`;
+                data.participants.forEach(p => {
+                    detailsHtml += `<li class="flex items-center justify-between p-2 rounded-md hover:bg-green-100"><div><p class="font-semibold text-slate-800">${p.participantName}</p><p class="text-xs text-slate-500">Status: <span class="font-medium">${p.status}</span></p></div><div class="flex items-center space-x-2"><button onclick="openUpdateModal('${p.id}')" class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button><button onclick="openDeleteModal('${p.id}')" class="p-1.5 text-red-600 hover:bg-red-100 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div></li>`;
+                });
+                detailsHtml += '</ul>';
+                const detailsRow = `<tr id="${connectorId}" class="details-row bg-green-50/50"><td colspan="3" class="p-4">${detailsHtml}</td></tr>`;
+                tableBody.innerHTML += mainRow + detailsRow;
+            });
+        }
+        
+        // --- Accordion/Expand Logic ---
+        window.toggleDetails = (id) => {
+            document.getElementById(id)?.classList.toggle('show');
+            document.getElementById(`icon-${id}`)?.classList.toggle('rotate-180');
+        };
+
+        // --- CRUD Logic ---
+        window.openDeleteModal = (id) => { event.stopPropagation(); currentDeleteId = id; showModal('deleteConfirmModal'); };
+        document.getElementById('confirmDeleteButton').addEventListener('click', async () => {
+            if (currentDeleteId) {
+                await deleteDoc(doc(db, `artifacts/${appId}/public/data/participants`, currentDeleteId));
+                closeModal('deleteConfirmModal');
+                currentDeleteId = null;
+            }
+        });
+
+        window.openUpdateModal = (id) => {
+            event.stopPropagation();
+            const p = allParticipants.get(id);
+            if (!p) return;
+            const investmentOpts = ["Less than 1 Lakh", "More than 1 Lakh", "More than 5 Lakhs", "More than 10 Lakhs"];
+            const investmentHtml = investmentOpts.map(opt => `<option value="${opt}" ${p.expectedInvestment === opt ? 'selected' : ''}>${opt}</option>`).join('');
+            const formContent = `
+                <input type="hidden" name="participantId" value="${id}">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block text-sm">Connector Name</label><input type="text" name="starConnectorName" value="${p.starConnectorName||''}" required class="mt-1 w-full input-style"></div>
+                    <div><label class="block text-sm">Participant Name</label><input type="text" name="participantName" value="${p.participantName||''}" required class="mt-1 w-full input-style"></div>
+                    <div><label class="block text-sm">Role</label><select name="role" required class="mt-1 w-full input-style custom-select"><option value="Investor" ${p.role==='Investor'?'selected':''}>Investor</option><option value="Marketing Leader" ${p.role==='Marketing Leader'?'selected':''}>Marketing Leader</option></select></div>
+                    <div><label class="block text-sm">City</label><input type="text" name="city" value="${p.city||''}" required class="mt-1 w-full input-style"></div>
+                    <div><label class="block text-sm">Attendance Status</label><select name="status" required class="mt-1 w-full input-style custom-select"><option value="Confirmed" ${p.status==='Confirmed'?'selected':''}>Confirmed</option><option value="Not Confirmed" ${p.status==='Not Confirmed'?'selected':''}>Not Confirmed</option></select></div>
+                    <div><label class="block text-sm">Expected Investment (INR)</label><select name="expectedInvestment" required class="mt-1 w-full input-style custom-select"><option value="">Select amount</option>${investmentHtml}</select></div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                     <button type="button" onclick="closeModal('updateModal')" class="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300">Cancel</button>
+                     <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Save Changes</button>
+                </div>`;
+            document.getElementById('updateForm').innerHTML = formContent.replaceAll('input-style', 'px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500');
+            showModal('updateModal');
+        };
+
+        document.getElementById('updateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const participantId = formData.get('participantId');
+            const updatedData = {
+                starConnectorName: formData.get('starConnectorName').trim(), participantName: formData.get('participantName').trim(),
+                role: formData.get('role'), city: formData.get('city').trim(), status: formData.get('status'),
+                expectedInvestment: formData.get('expectedInvestment') || null,
+            };
+            await updateDoc(doc(db, `artifacts/${appId}/public/data/participants`, participantId), updatedData);
+            closeModal('updateModal');
+        });
+
+        // --- Admin, Export, and AI Logic ---
+        document.getElementById('adminAccessButton').addEventListener('click', () => showModal('passwordModal'));
+        
+        document.getElementById('passwordForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const password = document.getElementById('adminPassword').value;
+            const errorEl = document.getElementById('passwordError');
+            if (password === 'PlanetCoinAdminonly') {
+                errorEl.classList.add('hidden');
+                document.getElementById('adminPassword').value = '';
+                closeModal('passwordModal');
+                showModal('adminDataModal');
+            } else {
+                errorEl.classList.remove('hidden');
+            }
+        });
+
+        function updateExportView() {
+            const tableBody = document.getElementById('exportTableBody');
+            const noDataMsg = document.getElementById('no-export-data-message');
+            if (!tableBody || !noDataMsg) return;
+
+            if (allParticipants.size === 0) {
+                tableBody.innerHTML = '';
+                noDataMsg.classList.remove('hidden');
+                return;
+            }
+            
+            noDataMsg.classList.add('hidden');
+            const rowsHtml = Array.from(allParticipants.values()).map(p => {
+                const timestamp = p.timestamp ? p.timestamp.toDate().toLocaleString('en-IN') : 'N/A';
+                return `<tr class="text-sm text-slate-700">
+                    <td class="px-4 py-3 whitespace-nowrap">${timestamp}</td>
+                    <td class="px-4 py-3">${p.starConnectorName || ''}</td>
+                    <td class="px-4 py-3">${p.connectorPhone || ''}</td>
+                    <td class="px-4 py-3">${p.participantName || ''}</td>
+                    <td class="px-4 py-3">${p.role || ''}</td>
+                    <td class="px-4 py-3">${p.city || ''}</td>
+                    <td class="px-4 py-3">${p.status || ''}</td>
+                    <td class="px-4 py-3">${p.expectedInvestment || ''}</td>
+                </tr>`;
+            }).join('');
+            
+            tableBody.innerHTML = rowsHtml;
+        }
+        
+        document.getElementById('exportCsvButton').addEventListener('click', () => {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            const headers = ["Timestamp", "Connector Name", "Connector Phone", "Participant Name", "Role", "City", "Status", "Investment (INR)"];
+            csvContent += headers.join(",") + "\r\n";
+            allParticipants.forEach(p => {
+                const timestamp = p.timestamp ? `"${p.timestamp.toDate().toLocaleString('en-IN')}"` : '""';
+                const row = [timestamp, `"${p.starConnectorName||''}"`, `"${p.connectorPhone||''}"`, `"${p.participantName||''}"`, `"${p.role||''}"`, `"${p.city||''}"`, `"${p.status||''}"`, `"${p.expectedInvestment||''}"`];
+                csvContent += row.join(",") + "\r\n";
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "planet_coin_launch_data.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        document.getElementById('aiInsightsButton').addEventListener('click', async () => {
+            const insightsContent = document.getElementById('aiInsightsContent');
+            insightsContent.innerHTML = '<p>Generating insights... please wait.</p>';
+            showModal('aiInsightsModal');
+
+            const participantsArray = Array.from(allParticipants.values());
+            if (participantsArray.length === 0) {
+                 insightsContent.innerHTML = '<p>No data available to generate insights.</p>';
+                 return;
+            }
+            
+            const dataForPrompt = participantsArray.map(p => {
+                return `Connector: ${p.starConnectorName}, Participant: ${p.participantName}, Role: ${p.role}, City: ${p.city}, Status: ${p.status}, Investment: ${p.expectedInvestment}`;
+            }).join('; ');
+
+            const prompt = `Based on the following list of participants for the Planet Coin launch event, provide a brief summary in Markdown format.
+            - Start with a headline "Event Insights".
+            - Create a "Key Metrics" section with a bulleted list of: total participants, number of confirmed participants, and the ratio of Investors to Marketing Leaders.
+            - Create a "Geographic Distribution" section identifying the top 3 cities with the most participants.
+            - Create an "Investment Outlook" section summarizing the expected investment levels from confirmed investors.
+            - Keep the summary concise and professional.
+            Data: ${dataForPrompt}`;
+            
+            try {
+                let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                const payload = { contents: chatHistory };
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    // Basic markdown to HTML conversion
+                    let html = text.replace(/# (.*)/g, '<h1>$1</h1>')
+                                   .replace(/## (.*)/g, '<h2>$1</h2>')
+                                   .replace(/### (.*)/g, '<h3>$1</h3>')
+                                   .replace(/\* (.*)/g, '<li>$1</li>')
+                                   .replace(/\n/g, '<br>');
+                    insightsContent.innerHTML = html;
+                } else {
+                    insightsContent.innerHTML = '<p>Could not generate insights at this time. The response from the AI was empty.</p>';
+                }
+
+            } catch(error) {
+                console.error("Error calling Gemini API:", error);
+                insightsContent.innerHTML = `<p class="text-red-500">An error occurred while generating insights. Please check the console for details.</p>`;
+            }
+        });
+
+
+        // --- Modal Logic ---
+        window.showModal = (id) => document.getElementById(id)?.classList.remove('hidden');
+        window.closeModal = (id) => document.getElementById(id)?.classList.add('hidden');
+
+    </script>
+</body>
+</html>
