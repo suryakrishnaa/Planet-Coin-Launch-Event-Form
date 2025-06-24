@@ -68,6 +68,13 @@
             <p class="text-lg md:text-xl text-slate-600">Star Connector Dashboard</p>
         </header>
 
+        <!-- Config Error Message -->
+        <div id="config-error" class="hidden max-w-5xl mx-auto bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md" role="alert">
+          <p class="font-bold">Configuration Error</p>
+          <p>The application is not connected to a database. Please follow the setup guide to create a Firebase project and paste the configuration details into this HTML file.</p>
+        </div>
+
+
         <!-- Tabs -->
         <div class="mb-6 border-b border-gray-200">
             <nav class="flex -mb-px space-x-4 md:space-x-6" aria-label="Tabs">
@@ -289,46 +296,66 @@
     <script type="module">
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, setLogLevel, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // --- IMPORTANT: PASTE YOUR FIREBASE CONFIGURATION HERE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDspQGPttpzs2beIWcA39SJ1qhJZnTUtGo",
+            authDomain: "planet-coin-dashboard1.firebaseapp.com",
+            projectId: "planet-coin-dashboard1",
+            storageBucket: "planet-coin-dashboard1.firebasestorage.app",
+            messagingSenderId: "18651582003",
+            appId: "1:18651582003:web:37201caec658ff91b19d46",
+            measurementId: "G-XVZXKR253Y"
+        };
+        // ---------------------------------------------------------
 
-        // --- Firebase Configuration ---
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config)
-            : { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID", appId: "YOUR_APP_ID" };
 
         // --- App & Firestore Initialization ---
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'planet-coin-launch';
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        setLogLevel('debug');
+        let db, auth;
+        const configErrorDiv = document.getElementById('config-error');
 
+        // Check if the config object has been filled out
+        if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId) {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                setLogLevel('debug');
+                
+                 onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        console.log("Authenticated with UID:", user.uid);
+                        listenForDataUpdates();
+                    } else {
+                        signInAnonymously(auth).catch((error) => {
+                            console.error("Anonymous sign-in failed:", error);
+                        });
+                    }
+                });
+
+            } catch(e) {
+                console.error("Firebase initialization failed:", e);
+                configErrorDiv.classList.remove('hidden');
+            }
+        } else {
+             console.error("Firebase config is missing or incomplete.");
+             configErrorDiv.classList.remove('hidden');
+             // Disable form submission if config is missing
+             document.getElementById('submitButton').disabled = true;
+             document.getElementById('submitButton').textContent = 'Database Not Configured';
+        }
+       
         // --- Global State ---
         let allParticipants = new Map();
         let currentDeleteId = null;
-
-        // --- Firestore Collection Reference ---
-        const participantsCollectionRef = collection(db, `artifacts/${appId}/public/data/participants`);
-
-        // --- Authentication & Initial Load ---
-        onAuthStateChanged(auth, async (user) => {
-          if (user) {
-            console.log("Authenticated with UID:", user.uid);
-            listenForDataUpdates();
-          } else {
-             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Authentication failed:", error);
-            }
-          }
-        });
-        
+        let participantsCollectionRef;
+        if(db) {
+             // Using a simpler, more direct collection path
+             participantsCollectionRef = collection(db, "participants");
+        }
+       
         function loadConnectorDetails() {
             const savedName = localStorage.getItem('planetCoin_starConnectorName');
             const savedPhone = localStorage.getItem('planetCoin_starConnectorPhone');
@@ -363,7 +390,7 @@
                 phoneError.classList.add('hidden');
             }
 
-            if(!auth.currentUser) { console.error("User not authenticated."); return; }
+            if(!auth || !auth.currentUser || !participantsCollectionRef) { console.error("App not ready."); return; }
 
             submitButton.disabled = true;
             submitButton.textContent = 'Submitting...';
@@ -397,6 +424,7 @@
 
         // --- Real-time Data Handling ---
         function listenForDataUpdates() {
+            if (!participantsCollectionRef) return;
             onSnapshot(participantsCollectionRef, (snapshot) => {
                 allParticipants.clear();
                 const sortedDocs = snapshot.docs.sort((a,b) => (b.data().timestamp?.toDate() || 0) - (a.data().timestamp?.toDate() || 0));
@@ -405,6 +433,7 @@
                 updateExportView(); 
             }, (error) => {
                 console.error("Error fetching data: ", error);
+                document.getElementById('summary-loader').innerHTML = `<p class="text-red-500">Error loading data. Check Firestore rules and console.</p>`;
             });
         }
         
@@ -461,8 +490,8 @@
         // --- CRUD Logic ---
         window.openDeleteModal = (id) => { event.stopPropagation(); currentDeleteId = id; showModal('deleteConfirmModal'); };
         document.getElementById('confirmDeleteButton').addEventListener('click', async () => {
-            if (currentDeleteId) {
-                await deleteDoc(doc(db, `artifacts/${appId}/public/data/participants`, currentDeleteId));
+            if (currentDeleteId && participantsCollectionRef) {
+                await deleteDoc(doc(participantsCollectionRef, currentDeleteId));
                 closeModal('deleteConfirmModal');
                 currentDeleteId = null;
             }
@@ -496,12 +525,14 @@
             e.preventDefault();
             const formData = new FormData(e.target);
             const participantId = formData.get('participantId');
+            if (!participantId || !participantsCollectionRef) return;
+            
             const updatedData = {
                 starConnectorName: formData.get('starConnectorName').trim(), participantName: formData.get('participantName').trim(),
                 role: formData.get('role'), city: formData.get('city').trim(), status: formData.get('status'),
                 expectedInvestment: formData.get('expectedInvestment') || null,
             };
-            await updateDoc(doc(db, `artifacts/${appId}/public/data/participants`, participantId), updatedData);
+            await updateDoc(doc(participantsCollectionRef, participantId), updatedData);
             closeModal('updateModal');
         });
 
