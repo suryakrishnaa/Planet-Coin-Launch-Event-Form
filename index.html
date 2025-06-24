@@ -156,8 +156,31 @@
             <!-- Page 2: Summary View -->
             <div id="page-summary" class="hidden">
                 <div class="bg-white p-4 md:p-8 rounded-xl shadow-sm max-w-5xl mx-auto">
-                    <h2 class="text-2xl font-bold text-green-800 mb-4">Live Summary</h2>
-                     <p class="text-sm text-slate-500 mb-6">Click on a row to expand and see participant details. This summary updates automatically.</p>
+                    <h2 class="text-2xl font-bold text-green-800 mb-2">Live Summary</h2>
+                     <p class="text-sm text-slate-500 mb-6">This summary updates automatically.</p>
+
+                    <!-- Overall Stats -->
+                    <div id="overall-stats" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-center">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-sm text-blue-800 font-medium">Total Participants</p>
+                            <p id="total-participants-stat" class="text-2xl font-bold text-blue-900">0</p>
+                        </div>
+                         <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="text-sm text-green-800 font-medium">Confirmed</p>
+                            <p id="total-confirmed-stat" class="text-2xl font-bold text-green-900">0</p>
+                        </div>
+                         <div class="bg-orange-50 p-4 rounded-lg">
+                            <p class="text-sm text-orange-800 font-medium">Not Confirmed</p>
+                            <p id="total-not-confirmed-stat" class="text-2xl font-bold text-orange-900">0</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Filter -->
+                    <div class="mb-4">
+                        <label for="search-connector" class="sr-only">Search by Star Connector Name</label>
+                        <input type="text" id="search-connector" placeholder="Search by Star Connector name..." class="block w-full px-4 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                    </div>
+
                     <div id="summary-loader" class="text-center py-10">
                         <p class="text-slate-600">Loading summary data...</p>
                     </div>
@@ -178,6 +201,9 @@
                         </div>
                          <div id="no-data-message" class="text-center py-10 hidden">
                              <p class="text-slate-500">No entries submitted yet.</p>
+                        </div>
+                        <div id="no-search-results-message" class="text-center py-10 hidden">
+                             <p class="text-slate-500">No connectors found matching your search.</p>
                         </div>
                     </div>
                 </div>
@@ -437,14 +463,28 @@
             });
         }
         
-        function updateSummaryView() {
+        function updateSummaryView(searchTerm = '') {
             const loader = document.getElementById('summary-loader');
             const content = document.getElementById('summary-content');
             const noDataMsg = document.getElementById('no-data-message');
+            const noSearchResultsMsg = document.getElementById('no-search-results-message');
             const tableBody = document.getElementById('summaryTableBody');
             
             loader.classList.add('hidden');
             content.classList.remove('hidden');
+            noSearchResultsMsg.classList.add('hidden');
+
+            // Update overall stats regardless of search
+            let totalConfirmed = 0;
+            let totalNotConfirmed = 0;
+            allParticipants.forEach(p => {
+                if (p.status === 'Confirmed') totalConfirmed++;
+                else if (p.status === 'Not Confirmed') totalNotConfirmed++;
+            });
+            document.getElementById('total-participants-stat').textContent = allParticipants.size;
+            document.getElementById('total-confirmed-stat').textContent = totalConfirmed;
+            document.getElementById('total-not-confirmed-stat').textContent = totalNotConfirmed;
+
 
             if (allParticipants.size === 0) {
                 noDataMsg.classList.remove('hidden');
@@ -455,13 +495,27 @@
             const summary = {};
             allParticipants.forEach(p => {
                 const name = p.starConnectorName || 'Unknown';
+                 // Filter logic
+                if (searchTerm && !name.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    return; 
+                }
+
                 if (!summary[name]) summary[name] = { participants: [], confirmed: 0, notConfirmed: 0 };
                 summary[name].participants.push(p);
                 if (p.status === 'Confirmed') summary[name].confirmed++;
                 else if (p.status === 'Not Confirmed') summary[name].notConfirmed++;
             });
+
+            if (Object.keys(summary).length === 0 && searchTerm) {
+                noSearchResultsMsg.classList.remove('hidden');
+            }
+
             renderSummaryTable(summary);
         }
+
+        document.getElementById('search-connector').addEventListener('input', (e) => {
+            updateSummaryView(e.target.value);
+        });
 
         function renderSummaryTable(summaryData) {
             const tableBody = document.getElementById('summaryTableBody');
