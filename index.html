@@ -52,6 +52,13 @@
         #aiInsightsContent ul { list-style-type: disc; margin-left: 1.5rem; }
         #aiInsightsContent li { margin-bottom: 0.25rem; }
         #aiInsightsContent p { margin-bottom: 0.5rem; }
+        .stat-box {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .stat-box:hover {
+            transform: translateY(-2px);
+        }
 
     </style>
 </head>
@@ -80,6 +87,7 @@
             <nav class="flex -mb-px space-x-4 md:space-x-6" aria-label="Tabs">
                 <button id="tab-form" class="py-4 px-1 border-b-2 text-base font-medium tab-active" onclick="showPage('form')">Entry Form</button>
                 <button id="tab-summary" class="py-4 px-1 border-b-2 text-base font-medium tab-inactive" onclick="showPage('summary')">Summary View</button>
+                <button id="tab-investment" class="py-4 px-1 border-b-2 text-base font-medium tab-inactive" onclick="showPage('investment')">Investments</button>
             </nav>
         </div>
 
@@ -170,28 +178,37 @@
             <div id="page-summary" class="hidden">
                 <div class="bg-white p-4 md:p-8 rounded-xl shadow-sm max-w-5xl mx-auto">
                     <h2 class="text-2xl font-bold text-green-800 mb-2">Live Summary</h2>
-                     <p class="text-sm text-slate-500 mb-6">This summary updates automatically.</p>
+                     <p class="text-sm text-slate-500 mb-6">This summary updates automatically. Click on a stat box to filter.</p>
 
                     <!-- Overall Stats -->
-                    <div id="overall-stats" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-center">
-                        <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 text-center">
+                        <div class="bg-blue-50 p-4 rounded-lg stat-box" onclick="applySummaryFilter('all')">
                             <p class="text-sm text-blue-800 font-medium">Total Participants</p>
                             <p id="total-participants-stat" class="text-2xl font-bold text-blue-900">0</p>
                         </div>
-                         <div class="bg-green-50 p-4 rounded-lg">
+                         <div class="bg-green-50 p-4 rounded-lg stat-box" onclick="applySummaryFilter('confirmed')">
                             <p class="text-sm text-green-800 font-medium">Confirmed</p>
                             <p id="total-confirmed-stat" class="text-2xl font-bold text-green-900">0</p>
                         </div>
-                         <div class="bg-orange-50 p-4 rounded-lg">
+                        <div class="bg-orange-50 p-4 rounded-lg stat-box" onclick="applySummaryFilter('not_confirmed')">
                             <p class="text-sm text-orange-800 font-medium">Not Confirmed</p>
                             <p id="total-not-confirmed-stat" class="text-2xl font-bold text-orange-900">0</p>
                         </div>
+                         <div class="bg-yellow-50 p-4 rounded-lg stat-box" onclick="applySummaryFilter('vip')">
+                            <p class="text-sm text-yellow-800 font-medium">VIP Guests</p>
+                            <p id="total-vip-stat" class="text-2xl font-bold text-yellow-900">0</p>
+                        </div>
                     </div>
                     
-                    <!-- Search Filter -->
-                    <div class="mb-4">
-                        <label for="search-connector" class="sr-only">Search by Star Connector Name</label>
-                        <input type="text" id="search-connector" placeholder="Search by Star Connector name..." class="block w-full px-4 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                    <!-- Search & Filter Controls -->
+                    <div class="flex flex-col md:flex-row gap-4 mb-4">
+                        <div class="flex-grow">
+                            <label for="search-connector" class="sr-only">Search by Star Connector Name</label>
+                            <input type="text" id="search-connector" placeholder="Search by Star Connector name..." class="block w-full px-4 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                        </div>
+                        <button id="clear-filter-button" class="hidden items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" onclick="applySummaryFilter('all')">
+                            Clear Filter
+                        </button>
                     </div>
 
                     <div id="summary-loader" class="text-center py-10">
@@ -204,7 +221,7 @@
                                     <tr>
                                         <th scope="col" class="w-12"></th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Star Connector Name</th>
-                                        <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">Total Participants</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">Participants</th>
                                     </tr>
                                 </thead>
                                 <tbody id="summaryTableBody" class="bg-white divide-y divide-gray-200">
@@ -217,6 +234,79 @@
                         </div>
                         <div id="no-search-results-message" class="text-center py-10 hidden">
                              <p class="text-slate-500">No connectors found matching your search.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Page 3: Investment View -->
+            <div id="page-investment" class="hidden">
+                <div class="bg-white p-4 md:p-8 rounded-xl shadow-sm max-w-7xl mx-auto">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-green-800">Investment Tracking</h2>
+                            <p class="text-sm text-slate-500 mt-1">Add or edit investment details for each participant.</p>
+                        </div>
+                         <button id="investmentExportCsvButton" class="mt-4 md:mt-0 flex items-center justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Export Master Report
+                        </button>
+                    </div>
+
+                    <!-- Investment Stats -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 text-center">
+                        <div class="bg-green-50 p-4 rounded-lg stat-box" onclick="applyInvestmentFilter('INR')">
+                            <p class="text-sm text-green-800 font-medium">Total Collected (INR)</p>
+                            <p id="total-inr-stat" class="text-2xl font-bold text-green-900">₹0</p>
+                        </div>
+                         <div class="bg-blue-50 p-4 rounded-lg stat-box" onclick="applyInvestmentFilter('USD')">
+                            <p class="text-sm text-blue-800 font-medium">Total Collected (USD)</p>
+                            <p id="total-usd-stat" class="text-2xl font-bold text-blue-900">$0</p>
+                        </div>
+                         <div class="bg-indigo-50 p-4 rounded-lg stat-box" onclick="applyInvestmentFilter('USDT')">
+                            <p class="text-sm text-indigo-800 font-medium">Total Collected (USDT)</p>
+                            <p id="total-usdt-stat" class="text-2xl font-bold text-indigo-900">0</p>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded-lg stat-box" onclick="applyInvestmentFilter('not_invested')">
+                            <p class="text-sm text-red-800 font-medium">Not Invested</p>
+                            <p id="total-not-invested-inv-stat" class="text-2xl font-bold text-red-900">0</p>
+                        </div>
+                    </div>
+
+                     <!-- Investment Search & Filter Controls -->
+                    <div class="flex flex-col md:flex-row gap-4 mb-4">
+                        <div class="flex-grow">
+                            <label for="search-investment" class="sr-only">Search</label>
+                            <input type="text" id="search-investment" placeholder="Search by name or phone..." class="block w-full px-4 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                        </div>
+                         <button id="clear-investment-filter-button" class="hidden items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" onclick="applyInvestmentFilter('all')">
+                            Clear Filter
+                        </button>
+                    </div>
+
+                    <div id="investment-loader" class="text-center py-10">
+                        <p class="text-slate-600">Loading investment data...</p>
+                    </div>
+                    <div id="investment-content" class="hidden">
+                         <div class="overflow-x-auto">
+                           <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-slate-100">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Participant</th>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Investment Details</th>
+                                        <th class="px-6 py-3 text-right text-xs font-bold text-slate-600 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="investmentTableBody" class="bg-white divide-y divide-gray-200">
+                                    <!-- Investment rows will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="no-investment-data-message" class="text-center py-10 hidden">
+                             <p class="text-slate-500">No entries submitted yet.</p>
+                        </div>
+                        <div id="no-investment-search-results-message" class="text-center py-10 hidden">
+                             <p class="text-slate-500">No one found matching your search.</p>
                         </div>
                     </div>
                 </div>
@@ -236,7 +326,7 @@
                 <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
             </div>
             <h3 class="text-lg font-medium text-gray-900">Submission Successful!</h3>
-            <p class="mt-2 text-sm text-gray-600">The participant's details have been recorded.</p>
+            <div id="successMessage" class="mt-2 text-sm text-gray-600">The participant's details have been recorded.</div>
             <div class="mt-4"><button type="button" onclick="closeModal('successModal')" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none">OK</button></div>
         </div>
     </div>
@@ -261,6 +351,26 @@
         </div>
     </div>
     
+    <div id="investmentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 md:p-8 max-w-lg w-full">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Add/Edit Investment</h3>
+            <form id="investmentForm" class="space-y-4">
+                <!-- Investment form content will be injected by JS -->
+            </form>
+        </div>
+    </div>
+
+    <div id="updateInvestmentConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 md:p-8 max-w-sm w-full">
+             <h3 class="text-lg font-medium text-gray-900">Confirm Update</h3>
+             <div id="updateInvestmentMessage" class="mt-2 text-sm text-gray-600"></div>
+             <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <button type="button" id="confirmInvestmentUpdateButton" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Update</button>
+                <button type="button" onclick="closeModal('updateInvestmentConfirmModal')" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
     <div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-lg shadow-xl p-6 md:p-8 max-w-sm w-full">
             <h3 class="text-lg font-medium leading-6 text-gray-900">Admin Access</h3>
@@ -278,6 +388,23 @@
         </div>
     </div>
     
+    <div id="investmentPasswordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 md:p-8 max-w-sm w-full">
+            <h3 class="text-lg font-medium leading-6 text-gray-900">Investment Tab Access</h3>
+            <form id="investmentPasswordForm" class="mt-4 space-y-4">
+                <div>
+                    <label for="investmentAdminPassword" class="block text-sm font-medium text-gray-700">Enter Password</label>
+                    <input type="password" name="investmentAdminPassword" id="investmentAdminPassword" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                    <p id="investmentPasswordError" class="text-red-500 text-xs mt-1 hidden">Incorrect password. Please try again.</p>
+                </div>
+                <div class="flex justify-end space-x-3">
+                     <button type="button" onclick="closeModal('investmentPasswordModal')" class="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300">Cancel</button>
+                     <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="adminDataModal" class="fixed inset-0 bg-slate-100 p-4 md:p-8 hidden z-40 overflow-y-auto">
         <div class="bg-white p-4 md:p-8 rounded-xl shadow-xl w-full max-w-7xl mx-auto">
              <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
@@ -384,7 +511,6 @@
         } else {
              console.error("Firebase config is missing or incomplete.");
              configErrorDiv.classList.remove('hidden');
-             // Disable form submission if config is missing
              document.getElementById('submitButton').disabled = true;
              document.getElementById('submitButton').textContent = 'Database Not Configured';
         }
@@ -392,9 +518,9 @@
         // --- Global State ---
         let allParticipants = new Map();
         let currentDeleteId = null;
+        let currentInvestmentUpdate = {};
         let participantsCollectionRef;
         if(db) {
-             // Using a simpler, more direct collection path
              participantsCollectionRef = collection(db, "participants");
         }
        
@@ -407,79 +533,66 @@
         loadConnectorDetails();
 
         // --- Page/Tab Switching Logic ---
+        let investmentTabUnlocked = false;
         window.showPage = (pageName) => {
+            if (pageName === 'investment' && !investmentTabUnlocked) {
+                showModal('investmentPasswordModal');
+                return;
+            }
+
             document.getElementById('page-form').classList.toggle('hidden', pageName !== 'form');
-            document.getElementById('page-summary').classList.toggle('hidden', pageName === 'form');
-            document.getElementById('tab-form').classList.toggle('tab-active', pageName === 'form');
-            document.getElementById('tab-form').classList.toggle('tab-inactive', pageName !== 'form');
-            document.getElementById('tab-summary').classList.toggle('tab-active', pageName !== 'form');
-            document.getElementById('tab-summary').classList.toggle('tab-inactive', pageName === 'form');
+            document.getElementById('page-summary').classList.toggle('hidden', pageName !== 'summary');
+            document.getElementById('page-investment').classList.toggle('hidden', pageName !== 'investment');
+            ['form', 'summary', 'investment'].forEach(p => {
+                document.getElementById(`tab-${p}`).classList.toggle('tab-active', p === pageName);
+                document.getElementById(`tab-${p}`).classList.toggle('tab-inactive', p !== pageName);
+            });
         };
 
         // --- Form Submission Logic ---
         document.getElementById('entryForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const submitButton = document.getElementById('submitButton');
-            
-            // Phone number validation
             const connectorPhoneInput = document.getElementById('connectorPhone');
             const connectorPhoneError = document.getElementById('phoneError');
             const participantPhoneInput = document.getElementById('participantPhone');
             const participantPhoneError = document.getElementById('participantPhoneError');
             const phoneRegex = /^\d{10}$/;
-
             let isValid = true;
-
             if (!phoneRegex.test(connectorPhoneInput.value.trim())) {
                 connectorPhoneError.classList.remove('hidden');
                 isValid = false;
-            } else {
-                connectorPhoneError.classList.add('hidden');
-            }
-            
-            // Now validating participant phone as required
+            } else { connectorPhoneError.classList.add('hidden'); }
             if (!phoneRegex.test(participantPhoneInput.value.trim())) {
                 participantPhoneError.classList.remove('hidden');
                 isValid = false;
-            } else {
-                 participantPhoneError.classList.add('hidden');
-            }
-
+            } else { participantPhoneError.classList.add('hidden'); }
             if (!isValid) return;
-
             if(!auth || !auth.currentUser || !participantsCollectionRef) { console.error("App not ready."); return; }
-
+            const submitButton = document.getElementById('submitButton');
             submitButton.disabled = true;
             submitButton.textContent = 'Submitting...';
             const formData = new FormData(e.target);
-            const starConnectorName = formData.get('starConnectorName').trim();
-            const connectorPhone = formData.get('connectorPhone').trim();
-
             const data = {
-                timestamp: serverTimestamp(), starConnectorName, connectorPhone,
+                timestamp: serverTimestamp(),
+                starConnectorName: formData.get('starConnectorName').trim(),
+                connectorPhone: formData.get('connectorPhone').trim(),
                 participantName: formData.get('participantName').trim(),
                 participantPhone: formData.get('participantPhone').trim(),
-                role: formData.get('role'),
-                city: formData.get('city').trim(),
+                role: formData.get('role'), city: formData.get('city').trim(),
                 status: formData.get('status'),
                 expectedInvestment: formData.get('expectedInvestment') || null,
                 roomNumber: formData.get('roomNumber').trim(),
-                isVip: formData.get('isVip') === 'on'
+                isVip: formData.get('isVip') === 'on',
+                investedAmount: null, currency: null, paymentMethod: null,
+                paymentOtherDetails: null, investmentRemarks: null
             };
             try {
                 await addDoc(participantsCollectionRef, data);
-                localStorage.setItem('planetCoin_starConnectorName', starConnectorName);
-                localStorage.setItem('planetCoin_starConnectorPhone', connectorPhone);
-                // Reset only participant fields
-                document.getElementById('participantName').value = '';
-                document.getElementById('participantPhone').value = '';
-                document.getElementById('role').value = '';
-                document.getElementById('city').value = '';
-                document.getElementById('status').value = '';
-                document.getElementById('expectedInvestment').value = '';
-                document.getElementById('roomNumber').value = '';
-                document.getElementById('isVip').checked = false;
-
+                localStorage.setItem('planetCoin_starConnectorName', data.starConnectorName);
+                localStorage.setItem('planetCoin_starConnectorPhone', data.connectorPhone);
+                e.target.reset();
+                loadConnectorDetails();
+                document.getElementById('successMessage').textContent = "The participant's details have been recorded.";
                 showModal('successModal');
             } catch (error) {
                 console.error("Error adding document: ", error);
@@ -496,13 +609,22 @@
                 allParticipants.clear();
                 const sortedDocs = snapshot.docs.sort((a,b) => (b.data().timestamp?.toDate() || 0) - (a.data().timestamp?.toDate() || 0));
                 sortedDocs.forEach(doc => allParticipants.set(doc.id, { id: doc.id, ...doc.data() }));
-                updateSummaryView();
+                updateSummaryView(document.getElementById('search-connector').value);
+                updateInvestmentView(document.getElementById('search-investment').value);
                 updateExportView(); 
             }, (error) => {
                 console.error("Error fetching data: ", error);
                 document.getElementById('summary-loader').innerHTML = `<p class="text-red-500">Error loading data. Check Firestore rules and console.</p>`;
+                document.getElementById('investment-loader').innerHTML = `<p class="text-red-500">Error loading data. Check Firestore rules and console.</p>`;
             });
         }
+        
+        let currentSummaryFilter = 'all';
+        window.applySummaryFilter = (filter) => {
+            currentSummaryFilter = filter;
+            document.getElementById('clear-filter-button').classList.toggle('hidden', filter === 'all');
+            updateSummaryView(document.getElementById('search-connector').value);
+        };
         
         function updateSummaryView(searchTerm = '') {
             const loader = document.getElementById('summary-loader');
@@ -515,17 +637,16 @@
             content.classList.remove('hidden');
             noSearchResultsMsg.classList.add('hidden');
 
-            // Update overall stats regardless of search
-            let totalConfirmed = 0;
-            let totalNotConfirmed = 0;
+            let totalConfirmed = 0, totalNotConfirmed = 0, totalVip = 0;
             allParticipants.forEach(p => {
                 if (p.status === 'Confirmed') totalConfirmed++;
                 else if (p.status === 'Not Confirmed') totalNotConfirmed++;
+                if (p.isVip) totalVip++;
             });
             document.getElementById('total-participants-stat').textContent = allParticipants.size;
             document.getElementById('total-confirmed-stat').textContent = totalConfirmed;
             document.getElementById('total-not-confirmed-stat').textContent = totalNotConfirmed;
-
+            document.getElementById('total-vip-stat').textContent = totalVip;
 
             if (allParticipants.size === 0) {
                 noDataMsg.classList.remove('hidden');
@@ -536,27 +657,26 @@
             const summary = {};
             allParticipants.forEach(p => {
                 const name = p.starConnectorName || 'Unknown';
-                 // Filter logic
-                if (searchTerm && !name.toLowerCase().includes(searchTerm.toLowerCase())) {
-                    return; 
-                }
-
+                if (searchTerm && !name.toLowerCase().includes(searchTerm.toLowerCase())) return; 
+                
+                if (currentSummaryFilter === 'confirmed' && p.status !== 'Confirmed') return;
+                if (currentSummaryFilter === 'not_confirmed' && p.status !== 'Not Confirmed') return;
+                if (currentSummaryFilter === 'vip' && !p.isVip) return;
+                
                 if (!summary[name]) summary[name] = { participants: [], confirmed: 0, notConfirmed: 0 };
                 summary[name].participants.push(p);
                 if (p.status === 'Confirmed') summary[name].confirmed++;
                 else if (p.status === 'Not Confirmed') summary[name].notConfirmed++;
             });
 
-            if (Object.keys(summary).length === 0 && searchTerm) {
+            if (Object.keys(summary).length === 0 && (searchTerm || currentSummaryFilter !== 'all')) {
                 noSearchResultsMsg.classList.remove('hidden');
+                noSearchResultsMsg.textContent = 'No one found matching your filter.';
             }
-
             renderSummaryTable(summary);
         }
 
-        document.getElementById('search-connector').addEventListener('input', (e) => {
-            updateSummaryView(e.target.value);
-        });
+        document.getElementById('search-connector').addEventListener('input', (e) => updateSummaryView(e.target.value));
 
         function renderSummaryTable(summaryData) {
             const tableBody = document.getElementById('summaryTableBody');
@@ -568,7 +688,7 @@
                 const mainRow = `<tr class="cursor-pointer hover:bg-slate-50" onclick="toggleDetails('${connectorId}')"><td class="px-4 py-4"><svg id="icon-${connectorId}" class="w-5 h-5 text-slate-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg></td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${connectorName}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 text-center font-semibold">${data.participants.length}</td></tr>`;
                 let detailsHtml = `<div class="flex space-x-6 pl-8 pb-3 text-sm border-b border-green-200 mb-3"><p>Confirmed: <span class="font-bold text-green-600">${data.confirmed}</span></p><p>Not Confirmed: <span class="font-bold text-orange-600">${data.notConfirmed}</span></p></div><ul class="space-y-3 pl-8">`;
                 data.participants.forEach(p => {
-                    detailsHtml += `<li class="flex items-center justify-between p-2 rounded-md hover:bg-green-100"><div><p class="font-semibold text-slate-800">${p.participantName} ${p.isVip ? '<span class="text-xs font-bold text-yellow-500 bg-yellow-100 px-2 py-1 rounded-full ml-2">VIP</span>' : ''}</p><p class="text-xs text-slate-500">Status: <span class="font-medium">${p.status}</span></p><p class="text-xs text-slate-500">Room: <span class="font-medium">${p.roomNumber ? p.roomNumber : 'Room no not updated'}</span></p></div><div class="flex items-center space-x-2"><button onclick="openUpdateModal('${p.id}')" class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button><button onclick="openDeleteModal('${p.id}')" class="p-1.5 text-red-600 hover:bg-red-100 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div></li>`;
+                    detailsHtml += `<li class="flex items-center justify-between p-2 rounded-md hover:bg-green-100"><div><p class="font-semibold text-slate-800">${p.participantName} ${p.isVip ? '<span class="text-xs font-bold text-yellow-500 bg-yellow-100 px-2 py-1 rounded-full ml-2">VIP</span>' : ''}</p><p class="text-xs text-slate-500">Status: <span class="font-medium">${p.status}</span></p><p class="text-xs text-slate-500">Room: <span class="font-medium">${p.roomNumber || 'Not Updated'}</span></p></div><div class="flex items-center space-x-2"><button onclick="openUpdateModal('${p.id}')" class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button><button onclick="openDeleteModal('${p.id}')" class="p-1.5 text-red-600 hover:bg-red-100 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div></li>`;
                 });
                 detailsHtml += '</ul>';
                 const detailsRow = `<tr id="${connectorId}" class="details-row bg-green-50/50"><td colspan="3" class="p-4">${detailsHtml}</td></tr>`;
@@ -576,13 +696,11 @@
             });
         }
         
-        // --- Accordion/Expand Logic ---
         window.toggleDetails = (id) => {
             document.getElementById(id)?.classList.toggle('show');
             document.getElementById(`icon-${id}`)?.classList.toggle('rotate-180');
         };
 
-        // --- CRUD Logic ---
         window.openDeleteModal = (id) => { event.stopPropagation(); currentDeleteId = id; showModal('deleteConfirmModal'); };
         document.getElementById('confirmDeleteButton').addEventListener('click', async () => {
             if (currentDeleteId && participantsCollectionRef) {
@@ -609,7 +727,7 @@
                     <div><label class="block text-sm">Attendance Status</label><select name="status" required class="mt-1 w-full input-style custom-select"><option value="Confirmed" ${p.status==='Confirmed'?'selected':''}>Confirmed</option><option value="Not Confirmed" ${p.status==='Not Confirmed'?'selected':''}>Not Confirmed</option></select></div>
                     <div><label class="block text-sm">Room No.</label><input type="text" name="roomNumber" value="${p.roomNumber||''}" class="mt-1 w-full input-style"></div>
                     <div><label class="block text-sm">Expected Investment (INR)</label><select name="expectedInvestment" required class="mt-1 w-full input-style custom-select"><option value="">Select amount</option>${investmentHtml}</select></div>
-                    <div class="md:col-span-2 flex items-center"><input name="isVip" type="checkbox" ${p.isVip ? 'checked' : ''} class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"><label class="ml-2 block text-sm">VIP</label></div>
+                    <div class="md:col-span-2 flex items-center"><input id="updateIsVip" name="isVip" type="checkbox" ${p.isVip ? 'checked' : ''} class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"><label for="updateIsVip" class="ml-2 block text-sm">VIP</label></div>
                 </div>
                 <div class="mt-6 flex justify-end space-x-3">
                      <button type="button" onclick="closeModal('updateModal')" class="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300">Cancel</button>
@@ -624,13 +742,11 @@
             const formData = new FormData(e.target);
             const participantId = formData.get('participantId');
             if (!participantId || !participantsCollectionRef) return;
-            
             const updatedData = {
                 starConnectorName: formData.get('starConnectorName').trim(),
                 participantName: formData.get('participantName').trim(),
                 participantPhone: formData.get('participantPhone').trim(),
-                role: formData.get('role'),
-                city: formData.get('city').trim(),
+                role: formData.get('role'), city: formData.get('city').trim(),
                 status: formData.get('status'),
                 expectedInvestment: formData.get('expectedInvestment') || null,
                 roomNumber: formData.get('roomNumber').trim(),
@@ -642,7 +758,6 @@
 
         // --- Admin, Export, and AI Logic ---
         document.getElementById('adminAccessButton').addEventListener('click', () => showModal('passwordModal'));
-        
         document.getElementById('passwordForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const password = document.getElementById('adminPassword').value;
@@ -661,13 +776,9 @@
             const tableBody = document.getElementById('exportTableBody');
             const noDataMsg = document.getElementById('no-export-data-message');
             if (!tableBody || !noDataMsg) return;
-
             if (allParticipants.size === 0) {
-                tableBody.innerHTML = '';
-                noDataMsg.classList.remove('hidden');
-                return;
+                tableBody.innerHTML = ''; noDataMsg.classList.remove('hidden'); return;
             }
-            
             noDataMsg.classList.add('hidden');
             const rowsHtml = Array.from(allParticipants.values()).map(p => {
                 const timestamp = p.timestamp ? p.timestamp.toDate().toLocaleString('en-IN') : 'N/A';
@@ -685,28 +796,20 @@
                     <td class="px-4 py-3">${p.isVip ? 'Yes' : 'No'}</td>
                 </tr>`;
             }).join('');
-            
             tableBody.innerHTML = rowsHtml;
         }
         
         document.getElementById('exportCsvButton').addEventListener('click', () => {
             let csvContent = "data:text/csv;charset=utf-8,";
-            const headers = ["Timestamp", "Connector Name", "Connector Phone", "Participant Name", "Participant Phone", "Role", "City", "Status", "Investment (INR)", "Room No.", "VIP"];
+            const headers = ["Timestamp", "Connector Name", "Connector Phone", "Participant Name", "Participant Phone", "Role", "City", "Status", "Expected Investment (INR)", "Room No.", "VIP"];
             csvContent += headers.join(",") + "\r\n";
             allParticipants.forEach(p => {
                 const timestamp = p.timestamp ? `"${p.timestamp.toDate().toLocaleString('en-IN')}"` : '""';
                 const row = [
                     timestamp,
-                    `"${p.starConnectorName||''}"`,
-                    `"${p.connectorPhone||''}"`,
-                    `"${p.participantName||''}"`,
-                    `"${p.participantPhone||''}"`,
-                    `"${p.role||''}"`,
-                    `"${p.city||''}"`,
-                    `"${p.status||''}"`,
-                    `"${p.expectedInvestment||''}"`,
-                    `"${p.roomNumber||''}"`,
-                    `"${p.isVip ? 'Yes' : 'No'}"`
+                    `"${p.starConnectorName||''}"`, `"${p.connectorPhone||''}"`, `"${p.participantName||''}"`, `"${p.participantPhone||''}"`,
+                    `"${p.role||''}"`, `"${p.city||''}"`, `"${p.status||''}"`, `"${p.expectedInvestment||''}"`,
+                    `"${p.roomNumber||''}"`, `"${p.isVip ? 'Yes' : 'No'}"`
                 ];
                 csvContent += row.join(",") + "\r\n";
             });
@@ -718,6 +821,229 @@
             link.click();
             document.body.removeChild(link);
         });
+
+        // --- Investment Page Logic ---
+        let currentInvestmentFilter = 'all';
+        window.applyInvestmentFilter = (filter) => {
+            currentInvestmentFilter = filter;
+            document.getElementById('clear-investment-filter-button').classList.toggle('hidden', filter === 'all');
+            updateInvestmentView(document.getElementById('search-investment').value);
+        };
+
+        function updateInvestmentView(searchTerm = '') {
+            const loader = document.getElementById('investment-loader');
+            const content = document.getElementById('investment-content');
+            const noDataMsg = document.getElementById('no-investment-data-message');
+            const noSearchResultsMsg = document.getElementById('no-investment-search-results-message');
+            const tableBody = document.getElementById('investmentTableBody');
+
+            loader.classList.add('hidden');
+            content.classList.remove('hidden');
+            noSearchResultsMsg.classList.add('hidden');
+
+            let totalINR = 0, totalUSD = 0, totalUSDT = 0, notInvestedCount = 0;
+            const filteredParticipants = [];
+
+            allParticipants.forEach(p => {
+                if (!p.investedAmount) notInvestedCount++;
+                const term = searchTerm.toLowerCase();
+                if (!searchTerm || (p.participantName.toLowerCase().includes(term)) || (p.starConnectorName.toLowerCase().includes(term)) || (p.participantPhone.includes(term)) || (p.connectorPhone.includes(term))) {
+                    
+                    if (currentInvestmentFilter === 'not_invested' && p.investedAmount) return;
+                    if (currentInvestmentFilter !== 'all' && currentInvestmentFilter !== 'not_invested' && p.currency !== currentInvestmentFilter) return;
+
+                    filteredParticipants.push(p);
+                }
+                if (p.investedAmount) {
+                    if (p.currency === 'INR') totalINR += parseFloat(p.investedAmount);
+                    if (p.currency === 'USD') totalUSD += parseFloat(p.investedAmount);
+                    if (p.currency === 'USDT') totalUSDT += parseFloat(p.investedAmount);
+                }
+            });
+            
+            document.getElementById('total-inr-stat').textContent = `₹${totalINR.toLocaleString('en-IN')}`;
+            document.getElementById('total-usd-stat').textContent = `$${totalUSD.toLocaleString('en-US')}`;
+            document.getElementById('total-usdt-stat').textContent = `${totalUSDT.toLocaleString()} USDT`;
+            document.getElementById('total-not-invested-inv-stat').textContent = notInvestedCount;
+
+
+            if (allParticipants.size === 0) {
+                noDataMsg.classList.remove('hidden'); tableBody.innerHTML = ''; return;
+            }
+            noDataMsg.classList.add('hidden');
+            if (filteredParticipants.length === 0 && (searchTerm || currentInvestmentFilter !== 'all')) {
+                noSearchResultsMsg.classList.remove('hidden');
+            }
+            renderInvestmentTable(filteredParticipants);
+        }
+        
+        document.getElementById('search-investment').addEventListener('input', (e) => updateInvestmentView(e.target.value));
+
+        function renderInvestmentTable(participants) {
+            const tableBody = document.getElementById('investmentTableBody');
+            tableBody.innerHTML = '';
+            participants.forEach(p => {
+                const row = document.createElement('tr');
+                let investedAmountDisplay = 'Not Invested';
+                if (p.investedAmount) {
+                    const currencySymbol = p.currency === 'INR' ? '₹' : (p.currency === 'USD' ? '$' : '');
+                    investedAmountDisplay = `${currencySymbol}${parseFloat(p.investedAmount).toLocaleString(p.currency === 'USD' ? 'en-US' : 'en-IN')} ${p.currency === 'USDT' ? 'USDT' : ''}`;
+                }
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${p.participantName} ${p.isVip ? '<span class="text-xs font-bold text-yellow-500 bg-yellow-100 px-2 py-1 rounded-full ml-1">VIP</span>' : ''}</div>
+                        <div class="text-sm text-gray-500">Brought by: ${p.starConnectorName}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900 font-semibold">${investedAmountDisplay}</div>
+                        <div class="text-sm text-gray-500">${p.paymentMethod || ''} ${p.paymentMethod === 'Other' ? `(${p.paymentOtherDetails || ''})` : ''}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="openInvestmentModal('${p.id}')" class="text-indigo-600 hover:text-indigo-900">Add/Edit</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        window.openInvestmentModal = (id) => {
+            const p = allParticipants.get(id);
+            if (!p) return;
+            const formContent = `
+                <input type="hidden" name="participantId" value="${id}">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Amount Invested</label>
+                        <input type="number" name="investedAmount" value="${p.investedAmount || ''}" class="mt-1 block w-full input-style" placeholder="e.g., 50000">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Currency</label>
+                        <select name="currency" class="mt-1 block w-full input-style custom-select">
+                            <option value="" ${!p.currency ? 'selected' : ''}>Select Currency</option>
+                            <option value="INR" ${p.currency === 'INR' ? 'selected' : ''}>INR (₹)</option>
+                            <option value="USD" ${p.currency === 'USD' ? 'selected' : ''}>USD ($)</option>
+                            <option value="USDT" ${p.currency === 'USDT' ? 'selected' : ''}>USDT</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Payment Method</label>
+                        <select name="paymentMethod" class="mt-1 block w-full input-style custom-select" onchange="toggleOtherDetails(this.value)">
+                            <option value="" ${!p.paymentMethod ? 'selected' : ''}>Select Method</option>
+                            <option value="Cash" ${p.paymentMethod === 'Cash' ? 'selected' : ''}>Cash</option>
+                            <option value="Bank Transfer" ${p.paymentMethod === 'Bank Transfer' ? 'selected' : ''}>Bank Transfer</option>
+                            <option value="Other" ${p.paymentMethod === 'Other' ? 'selected' : ''}>Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="otherDetailsContainer" class="${p.paymentMethod === 'Other' ? '' : 'hidden'} mt-4">
+                    <label class="block text-sm font-medium text-gray-700">Specify Other Method</label>
+                    <input type="text" name="paymentOtherDetails" value="${p.paymentOtherDetails || ''}" class="mt-1 block w-full input-style">
+                </div>
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700">Remarks / Comments</label>
+                    <textarea name="investmentRemarks" rows="3" class="mt-1 block w-full input-style">${p.investmentRemarks || ''}</textarea>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                     <button type="button" onclick="closeModal('investmentModal')" class="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300">Cancel</button>
+                     <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Save Investment</button>
+                </div>`;
+            document.getElementById('investmentForm').innerHTML = formContent.replaceAll('input-style', 'px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500');
+            showModal('investmentModal');
+        };
+        
+        window.toggleOtherDetails = (value) => document.getElementById('otherDetailsContainer').classList.toggle('hidden', value !== 'Other');
+
+        document.getElementById('investmentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const participantId = formData.get('participantId');
+            if (!participantId || !participantsCollectionRef) return;
+            
+            const originalParticipant = allParticipants.get(participantId);
+            const newAmount = formData.get('investedAmount') ? parseFloat(formData.get('investedAmount')) : null;
+            const newCurrency = formData.get('currency');
+
+            currentInvestmentUpdate = {
+                id: participantId,
+                data: {
+                    investedAmount: newAmount,
+                    currency: newCurrency,
+                    paymentMethod: formData.get('paymentMethod'),
+                    paymentOtherDetails: formData.get('paymentMethod') === 'Other' ? formData.get('paymentOtherDetails') : null,
+                    investmentRemarks: formData.get('investmentRemarks').trim()
+                }
+            };
+            
+            closeModal('investmentModal');
+
+            if (originalParticipant.investedAmount && (originalParticipant.investedAmount !== newAmount || originalParticipant.currency !== newCurrency)) {
+                const oldSymbol = originalParticipant.currency === 'INR' ? '₹' : (originalParticipant.currency === 'USD' ? '$' : '');
+                const newSymbol = newCurrency === 'INR' ? '₹' : (newCurrency === 'USD' ? '$' : '');
+                const oldText = `<strong>${oldSymbol}${originalParticipant.investedAmount || 0} ${originalParticipant.currency || ''}</strong>`.trim();
+                const newText = `<strong>${newSymbol}${newAmount || 0} ${newCurrency || ''}</strong>`.trim();
+                document.getElementById('updateInvestmentMessage').innerHTML = `Are you sure you want to update the investment from ${oldText} to ${newText}?`;
+                showModal('updateInvestmentConfirmModal');
+            } else {
+                await saveInvestmentUpdate();
+                const newSymbol = newCurrency === 'INR' ? '₹' : (newCurrency === 'USD' ? '$' : '');
+                const newText = `<strong>${newSymbol}${newAmount || 0} ${newCurrency || ''}</strong>`.trim();
+                document.getElementById('successMessage').innerHTML = `Investment of ${newText} has been recorded.`;
+                showModal('successModal');
+            }
+        });
+
+        async function saveInvestmentUpdate() {
+            if (currentInvestmentUpdate.id && participantsCollectionRef) {
+                await updateDoc(doc(participantsCollectionRef, currentInvestmentUpdate.id), currentInvestmentUpdate.data);
+                currentInvestmentUpdate = {};
+            }
+        }
+        
+        document.getElementById('confirmInvestmentUpdateButton').addEventListener('click', async () => {
+            await saveInvestmentUpdate();
+            closeModal('updateInvestmentConfirmModal');
+        });
+
+        document.getElementById('investmentExportCsvButton').addEventListener('click', () => {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            const headers = ["Timestamp", "Connector Name", "Connector Phone", "Participant Name", "Participant Phone", "Role", "City", "Status", "Expected Investment (INR)", "Room No.", "VIP", "Amount Invested", "Currency", "Payment Method", "Other Details", "Remarks"];
+            csvContent += headers.join(",") + "\r\n";
+            allParticipants.forEach(p => {
+                const timestamp = p.timestamp ? `"${p.timestamp.toDate().toLocaleString('en-IN')}"` : '""';
+                const row = [
+                    timestamp,
+                    `"${p.starConnectorName||''}"`, `"${p.connectorPhone||''}"`, `"${p.participantName||''}"`, `"${p.participantPhone||''}"`,
+                    `"${p.role||''}"`, `"${p.city||''}"`, `"${p.status||''}"`, `"${p.expectedInvestment||''}"`,
+                    `"${p.roomNumber||''}"`, `"${p.isVip ? 'Yes' : 'No'}"`,
+                    `"${p.investedAmount || ''}"`, `"${p.currency || ''}"`, `"${p.paymentMethod || ''}"`, `"${p.paymentOtherDetails || ''}"`, `"${p.investmentRemarks || ''}"`
+                ];
+                csvContent += row.join(",") + "\r\n";
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "planet_coin_full_investment_report.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        document.getElementById('investmentPasswordForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const password = document.getElementById('investmentAdminPassword').value;
+            const errorEl = document.getElementById('investmentPasswordError');
+            if (password === 'adminpc123@') {
+                errorEl.classList.add('hidden');
+                document.getElementById('investmentAdminPassword').value = '';
+                closeModal('investmentPasswordModal');
+                investmentTabUnlocked = true;
+                showPage('investment');
+            } else {
+                errorEl.classList.remove('hidden');
+            }
+        });
+
 
         document.getElementById('aiInsightsButton').addEventListener('click', async () => {
             const insightsContent = document.getElementById('aiInsightsContent');
