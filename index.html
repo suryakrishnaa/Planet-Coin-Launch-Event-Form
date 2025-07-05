@@ -112,6 +112,11 @@
                                     <input type="text" id="participantName" name="participantName" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
                                 </div>
                                 <div>
+                                    <label for="participantPhone" class="block text-sm font-medium text-slate-700">Participant's Phone <span class="text-red-500">*</span></label>
+                                    <input type="tel" id="participantPhone" name="participantPhone" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                     <p id="participantPhoneError" class="text-red-500 text-xs mt-1 hidden">Phone number must be 10 digits.</p>
+                                </div>
+                                <div>
                                     <label for="role" class="block text-sm font-medium text-slate-700">Role <span class="text-red-500">*</span></label>
                                     <select id="role" name="role" required class="custom-select mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
                                         <option value="" disabled selected>Select a role</option>
@@ -131,6 +136,10 @@
                                         <option value="Not Confirmed">Not Confirmed</option>
                                     </select>
                                 </div>
+                                <div>
+                                    <label for="roomNumber" class="block text-sm font-medium text-slate-700">Allotted Room Number</label>
+                                    <input type="text" id="roomNumber" name="roomNumber" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                </div>
                                 <div class="md:col-span-2">
                                     <label for="expectedInvestment" class="block text-sm font-medium text-slate-700">Expected Investment Amount (INR) <span class="text-red-500">*</span></label>
                                     <select id="expectedInvestment" name="expectedInvestment" required class="custom-select mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
@@ -140,6 +149,10 @@
                                         <option value="More than 5 Lakhs">More than 5 Lakhs</option>
                                         <option value="More than 10 Lakhs">More than 10 Lakhs</option>
                                     </select>
+                                </div>
+                                <div class="md:col-span-2 flex items-center">
+                                    <input id="isVip" name="isVip" type="checkbox" class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                                    <label for="isVip" class="ml-2 block text-sm font-medium text-slate-700">Mark as VIP</label>
                                 </div>
                             </div>
                         </div>
@@ -292,10 +305,13 @@
                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Connector Name</th>
                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Connector Phone</th>
                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Participant Name</th>
+                           <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Participant Phone</th>
                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Role</th>
                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">City</th>
                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Status</th>
                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Investment (INR)</th>
+                           <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Room No.</th>
+                           <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">VIP</th>
                        </tr>
                    </thead>
                    <tbody id="exportTableBody" class="bg-white divide-y divide-gray-200"></tbody>
@@ -406,15 +422,30 @@
             const submitButton = document.getElementById('submitButton');
             
             // Phone number validation
-            const phoneInput = document.getElementById('connectorPhone');
-            const phoneError = document.getElementById('phoneError');
+            const connectorPhoneInput = document.getElementById('connectorPhone');
+            const connectorPhoneError = document.getElementById('phoneError');
+            const participantPhoneInput = document.getElementById('participantPhone');
+            const participantPhoneError = document.getElementById('participantPhoneError');
             const phoneRegex = /^\d{10}$/;
-            if (!phoneRegex.test(phoneInput.value.trim())) {
-                phoneError.classList.remove('hidden');
-                return; // Stop submission
+
+            let isValid = true;
+
+            if (!phoneRegex.test(connectorPhoneInput.value.trim())) {
+                connectorPhoneError.classList.remove('hidden');
+                isValid = false;
             } else {
-                phoneError.classList.add('hidden');
+                connectorPhoneError.classList.add('hidden');
             }
+            
+            // Now validating participant phone as required
+            if (!phoneRegex.test(participantPhoneInput.value.trim())) {
+                participantPhoneError.classList.remove('hidden');
+                isValid = false;
+            } else {
+                 participantPhoneError.classList.add('hidden');
+            }
+
+            if (!isValid) return;
 
             if(!auth || !auth.currentUser || !participantsCollectionRef) { console.error("App not ready."); return; }
 
@@ -426,19 +457,29 @@
 
             const data = {
                 timestamp: serverTimestamp(), starConnectorName, connectorPhone,
-                participantName: formData.get('participantName').trim(), role: formData.get('role'),
-                city: formData.get('city').trim(), status: formData.get('status'),
+                participantName: formData.get('participantName').trim(),
+                participantPhone: formData.get('participantPhone').trim(),
+                role: formData.get('role'),
+                city: formData.get('city').trim(),
+                status: formData.get('status'),
                 expectedInvestment: formData.get('expectedInvestment') || null,
+                roomNumber: formData.get('roomNumber').trim(),
+                isVip: formData.get('isVip') === 'on'
             };
             try {
                 await addDoc(participantsCollectionRef, data);
                 localStorage.setItem('planetCoin_starConnectorName', starConnectorName);
                 localStorage.setItem('planetCoin_starConnectorPhone', connectorPhone);
+                // Reset only participant fields
                 document.getElementById('participantName').value = '';
+                document.getElementById('participantPhone').value = '';
                 document.getElementById('role').value = '';
                 document.getElementById('city').value = '';
                 document.getElementById('status').value = '';
                 document.getElementById('expectedInvestment').value = '';
+                document.getElementById('roomNumber').value = '';
+                document.getElementById('isVip').checked = false;
+
                 showModal('successModal');
             } catch (error) {
                 console.error("Error adding document: ", error);
@@ -527,7 +568,7 @@
                 const mainRow = `<tr class="cursor-pointer hover:bg-slate-50" onclick="toggleDetails('${connectorId}')"><td class="px-4 py-4"><svg id="icon-${connectorId}" class="w-5 h-5 text-slate-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg></td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${connectorName}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 text-center font-semibold">${data.participants.length}</td></tr>`;
                 let detailsHtml = `<div class="flex space-x-6 pl-8 pb-3 text-sm border-b border-green-200 mb-3"><p>Confirmed: <span class="font-bold text-green-600">${data.confirmed}</span></p><p>Not Confirmed: <span class="font-bold text-orange-600">${data.notConfirmed}</span></p></div><ul class="space-y-3 pl-8">`;
                 data.participants.forEach(p => {
-                    detailsHtml += `<li class="flex items-center justify-between p-2 rounded-md hover:bg-green-100"><div><p class="font-semibold text-slate-800">${p.participantName}</p><p class="text-xs text-slate-500">Status: <span class="font-medium">${p.status}</span></p></div><div class="flex items-center space-x-2"><button onclick="openUpdateModal('${p.id}')" class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button><button onclick="openDeleteModal('${p.id}')" class="p-1.5 text-red-600 hover:bg-red-100 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div></li>`;
+                    detailsHtml += `<li class="flex items-center justify-between p-2 rounded-md hover:bg-green-100"><div><p class="font-semibold text-slate-800">${p.participantName} ${p.isVip ? '<span class="text-xs font-bold text-yellow-500 bg-yellow-100 px-2 py-1 rounded-full ml-2">VIP</span>' : ''}</p><p class="text-xs text-slate-500">Status: <span class="font-medium">${p.status}</span></p></div><div class="flex items-center space-x-2"><button onclick="openUpdateModal('${p.id}')" class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg></button><button onclick="openDeleteModal('${p.id}')" class="p-1.5 text-red-600 hover:bg-red-100 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div></li>`;
                 });
                 detailsHtml += '</ul>';
                 const detailsRow = `<tr id="${connectorId}" class="details-row bg-green-50/50"><td colspan="3" class="p-4">${detailsHtml}</td></tr>`;
@@ -562,10 +603,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label class="block text-sm">Connector Name</label><input type="text" name="starConnectorName" value="${p.starConnectorName||''}" required class="mt-1 w-full input-style"></div>
                     <div><label class="block text-sm">Participant Name</label><input type="text" name="participantName" value="${p.participantName||''}" required class="mt-1 w-full input-style"></div>
+                    <div><label class="block text-sm">Participant Phone</label><input type="tel" name="participantPhone" value="${p.participantPhone||''}" required class="mt-1 w-full input-style"></div>
                     <div><label class="block text-sm">Role</label><select name="role" required class="mt-1 w-full input-style custom-select"><option value="Investor" ${p.role==='Investor'?'selected':''}>Investor</option><option value="Marketing Leader" ${p.role==='Marketing Leader'?'selected':''}>Marketing Leader</option></select></div>
                     <div><label class="block text-sm">City</label><input type="text" name="city" value="${p.city||''}" required class="mt-1 w-full input-style"></div>
                     <div><label class="block text-sm">Attendance Status</label><select name="status" required class="mt-1 w-full input-style custom-select"><option value="Confirmed" ${p.status==='Confirmed'?'selected':''}>Confirmed</option><option value="Not Confirmed" ${p.status==='Not Confirmed'?'selected':''}>Not Confirmed</option></select></div>
+                    <div><label class="block text-sm">Room No.</label><input type="text" name="roomNumber" value="${p.roomNumber||''}" class="mt-1 w-full input-style"></div>
                     <div><label class="block text-sm">Expected Investment (INR)</label><select name="expectedInvestment" required class="mt-1 w-full input-style custom-select"><option value="">Select amount</option>${investmentHtml}</select></div>
+                    <div class="md:col-span-2 flex items-center"><input name="isVip" type="checkbox" ${p.isVip ? 'checked' : ''} class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"><label class="ml-2 block text-sm">VIP</label></div>
                 </div>
                 <div class="mt-6 flex justify-end space-x-3">
                      <button type="button" onclick="closeModal('updateModal')" class="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300">Cancel</button>
@@ -582,9 +626,15 @@
             if (!participantId || !participantsCollectionRef) return;
             
             const updatedData = {
-                starConnectorName: formData.get('starConnectorName').trim(), participantName: formData.get('participantName').trim(),
-                role: formData.get('role'), city: formData.get('city').trim(), status: formData.get('status'),
+                starConnectorName: formData.get('starConnectorName').trim(),
+                participantName: formData.get('participantName').trim(),
+                participantPhone: formData.get('participantPhone').trim(),
+                role: formData.get('role'),
+                city: formData.get('city').trim(),
+                status: formData.get('status'),
                 expectedInvestment: formData.get('expectedInvestment') || null,
+                roomNumber: formData.get('roomNumber').trim(),
+                isVip: formData.get('isVip') === 'on'
             };
             await updateDoc(doc(participantsCollectionRef, participantId), updatedData);
             closeModal('updateModal');
@@ -597,7 +647,7 @@
             e.preventDefault();
             const password = document.getElementById('adminPassword').value;
             const errorEl = document.getElementById('passwordError');
-            if (password === 'PlanetCoinAdminonly') {
+            if (password === 'adminpc') {
                 errorEl.classList.add('hidden');
                 document.getElementById('adminPassword').value = '';
                 closeModal('passwordModal');
@@ -626,10 +676,13 @@
                     <td class="px-4 py-3">${p.starConnectorName || ''}</td>
                     <td class="px-4 py-3">${p.connectorPhone || ''}</td>
                     <td class="px-4 py-3">${p.participantName || ''}</td>
+                    <td class="px-4 py-3">${p.participantPhone || ''}</td>
                     <td class="px-4 py-3">${p.role || ''}</td>
                     <td class="px-4 py-3">${p.city || ''}</td>
                     <td class="px-4 py-3">${p.status || ''}</td>
                     <td class="px-4 py-3">${p.expectedInvestment || ''}</td>
+                    <td class="px-4 py-3">${p.roomNumber || ''}</td>
+                    <td class="px-4 py-3">${p.isVip ? 'Yes' : 'No'}</td>
                 </tr>`;
             }).join('');
             
@@ -638,11 +691,23 @@
         
         document.getElementById('exportCsvButton').addEventListener('click', () => {
             let csvContent = "data:text/csv;charset=utf-8,";
-            const headers = ["Timestamp", "Connector Name", "Connector Phone", "Participant Name", "Role", "City", "Status", "Investment (INR)"];
+            const headers = ["Timestamp", "Connector Name", "Connector Phone", "Participant Name", "Participant Phone", "Role", "City", "Status", "Investment (INR)", "Room No.", "VIP"];
             csvContent += headers.join(",") + "\r\n";
             allParticipants.forEach(p => {
                 const timestamp = p.timestamp ? `"${p.timestamp.toDate().toLocaleString('en-IN')}"` : '""';
-                const row = [timestamp, `"${p.starConnectorName||''}"`, `"${p.connectorPhone||''}"`, `"${p.participantName||''}"`, `"${p.role||''}"`, `"${p.city||''}"`, `"${p.status||''}"`, `"${p.expectedInvestment||''}"`];
+                const row = [
+                    timestamp,
+                    `"${p.starConnectorName||''}"`,
+                    `"${p.connectorPhone||''}"`,
+                    `"${p.participantName||''}"`,
+                    `"${p.participantPhone||''}"`,
+                    `"${p.role||''}"`,
+                    `"${p.city||''}"`,
+                    `"${p.status||''}"`,
+                    `"${p.expectedInvestment||''}"`,
+                    `"${p.roomNumber||''}"`,
+                    `"${p.isVip ? 'Yes' : 'No'}"`
+                ];
                 csvContent += row.join(",") + "\r\n";
             });
             const encodedUri = encodeURI(csvContent);
@@ -666,12 +731,12 @@
             }
             
             const dataForPrompt = participantsArray.map(p => {
-                return `Connector: ${p.starConnectorName}, Participant: ${p.participantName}, Role: ${p.role}, City: ${p.city}, Status: ${p.status}, Investment: ${p.expectedInvestment}`;
+                return `Connector: ${p.starConnectorName}, Participant: ${p.participantName}, Role: ${p.role}, City: ${p.city}, Status: ${p.status}, Investment: ${p.expectedInvestment}, VIP: ${p.isVip ? 'Yes':'No'}`;
             }).join('; ');
 
             const prompt = `Based on the following list of participants for the Planet Coin launch event, provide a brief summary in Markdown format.
             - Start with a headline "Event Insights".
-            - Create a "Key Metrics" section with a bulleted list of: total participants, number of confirmed participants, and the ratio of Investors to Marketing Leaders.
+            - Create a "Key Metrics" section with a bulleted list of: total participants, number of confirmed participants, total VIPs, and the ratio of Investors to Marketing Leaders.
             - Create a "Geographic Distribution" section identifying the top 3 cities with the most participants.
             - Create an "Investment Outlook" section summarizing the expected investment levels from confirmed investors.
             - Keep the summary concise and professional.
